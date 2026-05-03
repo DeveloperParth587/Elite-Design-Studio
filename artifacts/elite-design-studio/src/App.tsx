@@ -82,8 +82,8 @@ const clerkAppearance = {
     userButtonBox: "border border-[#3a3a3a]",
     userButtonOuterIdentifier: "!text-[#f5f0e8]",
     userButtonPopoverRootBox: "bg-[#1a1a1a] border border-[#3a3a3a]",
-    userButtonPopoverActionButton: "!text-[#00f7ff] hover:!text-[#00ffff] hover:bg-[#1e3a3a] !font-medium",
-    userButtonPopoverActionButtonText: "!text-[#00f7ff]",
+    userButtonPopoverActionButton: "!text-white hover:!text-white hover:bg-[#3a3a3a] !font-medium",
+    userButtonPopoverActionButtonText: "!text-white",
     // Hide all badges (dev mode, deployment, etc.)
     internal__developmentModeNotice: { display: "none" },
     badge: { display: "none" },

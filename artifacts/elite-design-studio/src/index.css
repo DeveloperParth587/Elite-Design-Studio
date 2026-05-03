@@ -250,18 +250,18 @@
     display: none !important;
   }
 
-  /* Bright cyan/aqua colors for UserButton menu items */
+  /* White colors for UserButton menu items */
   .cl-userButtonPopoverActionButton {
-    color: #00f7ff !important;
+    color: #ffffff !important;
     font-weight: 500 !important;
   }
 
   .cl-userButtonPopoverActionButton:hover {
-    color: #00ffff !important;
-    background-color: rgba(0, 127, 127, 0.15) !important;
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
 
-  /* Bright lime for destructive actions */
+  /* Bright lime for sign out actions */
   .cl-userButtonPopoverActionButton[data-localization-key*="signOut"],
   .cl-userButtonPopoverActionButton[data-localization-key*="logout"] {
     color: #00ff88 !important;
