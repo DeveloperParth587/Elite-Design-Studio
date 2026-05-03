@@ -6,6 +6,7 @@ import testimonialsRouter from "./testimonials";
 import aiRouter from "./ai";
 import dashboardRouter from "./dashboard";
 import importRouter from "./import";
+import sharesRouter from "./shares";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(testimonialsRouter);
 router.use(aiRouter);
 router.use(dashboardRouter);
 router.use(importRouter);
+router.use(sharesRouter);
 
 export default router;

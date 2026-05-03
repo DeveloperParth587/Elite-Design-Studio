@@ -19,6 +19,7 @@ import AdminProjects from "@/pages/admin/projects";
 import AIStudio from "@/pages/admin/ai-studio";
 import EmailGenerator from "@/pages/admin/email-generator";
 import AdminTestimonials from "@/pages/admin/testimonials-admin";
+import SharePage from "@/pages/share";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
@@ -171,6 +172,7 @@ function Router() {
       <Route path="/admin/ai-studio">{() => <ProtectedRoute component={AIStudio} />}</Route>
       <Route path="/admin/email-generator">{() => <ProtectedRoute component={EmailGenerator} />}</Route>
       <Route path="/admin/testimonials">{() => <ProtectedRoute component={AdminTestimonials} />}</Route>
+      <Route path="/share/:token" component={SharePage} />
       <Route component={NotFound} />
     </Switch>
   );
