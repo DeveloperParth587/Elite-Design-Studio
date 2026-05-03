@@ -119,6 +119,52 @@ router.post("/ai/generate-slideshow", async (req, res) => {
   }
 });
 
+router.post("/ai/generate-walkthrough", async (req, res) => {
+  try {
+    const { prompt } = req.body as { prompt?: string };
+    if (!prompt?.trim()) return res.status(400).json({ error: "Prompt is required" });
+
+    const base = prompt.trim();
+
+    const rooms = [
+      {
+        room: "Entrance Foyer",
+        suffix: "Grand entrance foyer, eye-level straight-on view, premium flooring, statement lighting fixture, architectural details, welcoming atmosphere.",
+      },
+      {
+        room: "Living Room",
+        suffix: "Spacious living room, wide-angle shot from corner, sofa arrangement, coffee table, feature wall, ambient and accent lighting.",
+      },
+      {
+        room: "Kitchen & Dining",
+        suffix: "Open-plan kitchen and dining area, island or breakfast bar, pendant lights, high-end appliances, natural light from windows.",
+      },
+      {
+        room: "Master Bedroom",
+        suffix: "Master bedroom, centred on the bed, statement headboard, bedside tables, soft warm lighting, luxurious textiles and finishes.",
+      },
+      {
+        room: "Bathroom",
+        suffix: "Luxury en-suite bathroom, freestanding or built-in bath, rainfall shower, marble or stone finishes, spa-like tranquil atmosphere.",
+      },
+    ];
+
+    const frames = await Promise.all(
+      rooms.map(async ({ room, suffix }) => {
+        const fullPrompt = `${base}. Room: ${room}. ${suffix} Photorealistic interior photography, professional lighting, architectural digest quality, ultra-realistic, 8K.`;
+        const result = await geminiGenerateImage(fullPrompt);
+        return { room, b64_json: result.b64_json, mimeType: result.mimeType };
+      })
+    );
+
+    res.json({ frames });
+  } catch (err) {
+    req.log.error(err);
+    const msg = err instanceof Error ? err.message : "Walkthrough generation failed";
+    res.status(502).json({ error: `Generation failed: ${msg}. Please retry.` });
+  }
+});
+
 router.post("/ai/generate-email", async (req, res) => {
   try {
     const parsed = GenerateEmailBody.safeParse(req.body);
