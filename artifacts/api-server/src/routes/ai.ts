@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ai } from "@workspace/integrations-gemini-ai";
 import { EnhancePromptBody, GenerateImageBody, GenerateEmailBody } from "@workspace/api-zod";
-import pRetry from "p-retry";
+import pRetry, { AbortError } from "p-retry";
 
 const router = Router();
 
@@ -22,7 +22,7 @@ async function callHuggingFace(url: string, body: object, hfToken: string): Prom
       });
 
       if (res.status === 503) {
-        throw new pRetry.AbortError("Model still loading after wait timeout");
+        throw new AbortError("Model still loading after wait timeout");
       }
 
       if (!res.ok) {
@@ -37,7 +37,7 @@ async function callHuggingFace(url: string, body: object, hfToken: string): Prom
       minTimeout: 8000,
       maxTimeout: 20000,
       onFailedAttempt: (error) => {
-        if (error instanceof pRetry.AbortError) throw error;
+        if (error instanceof AbortError) throw error;
       },
     }
   );
