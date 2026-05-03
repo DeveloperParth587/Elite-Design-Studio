@@ -242,6 +242,11 @@
   .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after { inset: -1px; }
 
+  /* Hide Clerk "Development mode" badge via stable data attribute */
+  [data-localization-key="badge__devMode"] {
+    display: none !important;
+  }
+
   .gold-text {
     background: linear-gradient(135deg, hsl(38 60% 72%) 0%, hsl(42 70% 58%) 50%, hsl(36 55% 65%) 100%);
     -webkit-background-clip: text;

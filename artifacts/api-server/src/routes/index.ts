@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { requireAuth } from "@clerk/express";
+import { getAuth } from "@clerk/express";
 import { requireAdmin } from "../middlewares/adminAuth";
 import healthRouter from "./health";
 import projectsRouter from "./projects";
@@ -10,24 +10,32 @@ import dashboardRouter from "./dashboard";
 import importRouter from "./import";
 import sharesRouter from "./shares";
 import authRouter from "./auth";
+import type { Request, Response, NextFunction } from "express";
+
+function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  const { userId } = getAuth(req);
+  if (!userId) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
+  next();
+}
 
 const router: IRouter = Router();
 
-// ── Public routes ──────────────────────────────────────────────────
-router.use(healthRouter);   // GET /healthz
-router.use(sharesRouter);   // GET /shares/:token (public share page)
-router.use(authRouter);     // GET /me/is-admin
+// ── Always public ────────────────────────────────────────────────────────────
+router.use(healthRouter);
+router.use(sharesRouter);
+router.use(authRouter);
 
-// Public read routes (portfolio & consultation form)
-router.get("/projects/featured", (req, res, next) => projectsRouter.handle(req, res, next));
-router.get("/testimonials", (req, res, next) => testimonialsRouter.handle(req, res, next));
-router.post("/leads", (req, res, next) => leadsRouter.handle(req, res, next));
-router.post("/leads/consultation", (req, res, next) => leadsRouter.handle(req, res, next));
+// ── Public read-only: portfolio & lead submission ────────────────────────────
+router.get("/projects/featured", projectsRouter);
+router.get("/testimonials", testimonialsRouter);
+router.post("/leads", leadsRouter);
 
-// ── Admin-only routes (require auth + admin email) ─────────────────
-router.use(requireAuth());
+// ── Admin-only: everything else requires auth + admin email ──────────────────
+router.use(requireAuth);
 router.use(requireAdmin);
-
 router.use(projectsRouter);
 router.use(leadsRouter);
 router.use(testimonialsRouter);
