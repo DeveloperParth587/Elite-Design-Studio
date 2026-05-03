@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Show, useUser, UserButton } from "@clerk/react";
 import { Menu, X } from "lucide-react";
@@ -14,9 +14,29 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
+function useIsAdmin() {
+  const { isSignedIn, isLoaded } = useUser();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      setIsAdmin(false);
+      return;
+    }
+
+    fetch(`/api/me/is-admin`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setIsAdmin(d.isAdmin ?? false))
+      .catch(() => setIsAdmin(false));
+  }, [isLoaded, isSignedIn]);
+
+  return isAdmin;
+}
+
 export default function Navbar() {
   const [location] = useLocation();
   const [open, setOpen] = useState(false);
+  const isAdmin = useIsAdmin();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-xl">
@@ -46,11 +66,13 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           <Show when="signed-in">
-            <Link href="/admin">
-              <Button variant="outline" size="sm" className="hidden md:flex text-xs tracking-widest uppercase border-primary/30 text-primary hover:bg-primary/10">
-                Dashboard
-              </Button>
-            </Link>
+            {isAdmin && (
+              <Link href="/admin">
+                <Button variant="outline" size="sm" className="hidden md:flex text-xs tracking-widest uppercase border-primary/30 text-primary hover:bg-primary/10">
+                  Dashboard
+                </Button>
+              </Link>
+            )}
             <UserButton />
           </Show>
           <Show when="signed-out">
@@ -86,9 +108,11 @@ export default function Navbar() {
             </Link>
           ))}
           <Show when="signed-in">
-            <Link href="/admin" onClick={() => setOpen(false)}>
-              <span className="text-xs tracking-widest uppercase font-medium text-primary py-2 block">Dashboard</span>
-            </Link>
+            {isAdmin && (
+              <Link href="/admin" onClick={() => setOpen(false)}>
+                <span className="text-xs tracking-widest uppercase font-medium text-primary py-2 block">Dashboard</span>
+              </Link>
+            )}
           </Show>
           <Show when="signed-out">
             <Link href="/sign-in" onClick={() => setOpen(false)}>

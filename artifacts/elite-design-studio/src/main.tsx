@@ -4,12 +4,12 @@ import "./index.css";
 
 document.documentElement.classList.add("dark");
 
-// Hide Clerk "Development mode" badge.
-// Clerk renders it via a remote CDN script after hydration, so we use a
-// MutationObserver to catch it whenever it appears in the DOM.
-function hideDevModeBadge() {
-  // Target by stable data-localization-key attribute
-  document.querySelectorAll<HTMLElement>('[data-localization-key="badge__devMode"]').forEach((el) => {
+// Hide Clerk badges (dev mode, deployment notices, etc.)
+// Clerk renders these via a remote CDN script after hydration, so we use a
+// MutationObserver to catch them whenever they appear in the DOM.
+function hideBadges() {
+  // Target by data-localization-key attribute
+  document.querySelectorAll<HTMLElement>('[data-localization-key^="badge__"]').forEach((el) => {
     el.style.setProperty("display", "none", "important");
     // Also hide the wrapping container so no empty space remains
     let p = el.parentElement;
@@ -20,16 +20,22 @@ function hideDevModeBadge() {
       } else break;
     }
   });
-  // Fallback: hide any anchor whose trimmed text is exactly "Development mode"
+  // Fallback: hide any text that matches known badge labels
   document.querySelectorAll<HTMLAnchorElement>("a").forEach((el) => {
-    if (el.textContent?.trim() === "Development mode") {
+    const text = el.textContent?.trim() || "";
+    if (
+      text === "Development mode" ||
+      text === "Deployment" ||
+      text.toLowerCase().includes("deployment") ||
+      text.toLowerCase().includes("development mode")
+    ) {
       el.style.setProperty("display", "none", "important");
       if (el.parentElement) el.parentElement.style.setProperty("display", "none", "important");
     }
   });
 }
 
-const devModeObserver = new MutationObserver(hideDevModeBadge);
-devModeObserver.observe(document.body, { childList: true, subtree: true });
+const badgeObserver = new MutationObserver(hideBadges);
+badgeObserver.observe(document.body, { childList: true, subtree: true });
 
 createRoot(document.getElementById("root")!).render(<App />);
