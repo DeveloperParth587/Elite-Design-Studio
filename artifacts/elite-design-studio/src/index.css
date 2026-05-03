@@ -246,7 +246,14 @@
   [data-localization-key="badge__devMode"],
   [data-localization-key*="badge__"],
   [data-localization-key*="deployment"],
-  [data-localization-key*="developmentMode"] {
+  [data-localization-key*="developmentMode"],
+  .cl-userButtonPopoverFooter,
+  .cl-userButtonPopoverFooter * {
+    display: none !important;
+  }
+  
+  /* Hide any element that might contain "Development mode" text */
+  :has(> [data-localization-key*="devMode"]) {
     display: none !important;
   }
 
