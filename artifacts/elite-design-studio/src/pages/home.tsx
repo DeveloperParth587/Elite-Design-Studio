@@ -237,9 +237,6 @@ export default function Home() {
       <footer className="border-t border-border py-10 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-sm bg-primary/15 border border-primary/30 flex items-center justify-center">
-              <span className="text-[9px] font-bold tracking-widest text-primary">EDS</span>
-            </div>
             <span className="text-xs font-semibold tracking-[0.15em] uppercase text-foreground/70">Elite Design Studio</span>
           </div>
           <p className="text-xs text-muted-foreground tracking-wide text-center">

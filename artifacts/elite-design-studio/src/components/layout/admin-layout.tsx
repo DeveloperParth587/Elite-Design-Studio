@@ -31,9 +31,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="h-16 flex items-center px-4 border-b border-sidebar-border justify-between">
           {!collapsed && (
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
-                <span className="text-[9px] font-bold tracking-widest text-primary">EDS</span>
-              </div>
               <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/80">Studio</span>
             </Link>
           )}
@@ -79,9 +76,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-sidebar border-b border-border flex items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
-            <span className="text-[9px] font-bold tracking-widest text-primary">EDS</span>
-          </div>
           <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-foreground/80">Studio</span>
         </Link>
         <div className="flex items-center gap-3">

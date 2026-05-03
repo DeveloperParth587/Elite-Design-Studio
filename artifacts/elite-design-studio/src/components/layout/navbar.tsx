@@ -22,9 +22,6 @@ export default function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
-            <span className="text-xs font-bold tracking-widest text-primary">EDS</span>
-          </div>
           <span className="text-sm font-semibold tracking-[0.15em] uppercase text-foreground/90">
             Elite Design Studio
           </span>

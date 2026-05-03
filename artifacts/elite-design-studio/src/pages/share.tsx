@@ -70,9 +70,6 @@ export default function SharePage() {
     return (
       <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
         <div className="text-center space-y-4 px-6">
-          <div className="w-16 h-16 rounded-sm bg-[#c8a96e]/10 border border-[#c8a96e]/20 flex items-center justify-center mx-auto mb-2">
-            <span className="text-lg font-bold tracking-widest text-[#c8a96e]">EDS</span>
-          </div>
           <p className="text-[#f5f0e8] text-lg font-medium">Design preview not found</p>
           <p className="text-[#8b7355] text-sm">This link may have expired or is invalid.</p>
           <Link href="/">
@@ -96,9 +93,6 @@ export default function SharePage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="w-9 h-9 rounded-sm bg-[#c8a96e]/15 border border-[#c8a96e]/30 flex items-center justify-center">
-                <span className="text-xs font-bold tracking-widest text-[#c8a96e]">EDS</span>
-              </div>
               <div>
                 <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#f5f0e8]">Elite Design Studio</p>
                 <p className="text-[10px] tracking-widest uppercase text-[#8b7355]">Luxury Interior Design</p>
@@ -218,9 +212,6 @@ export default function SharePage() {
         {/* Footer band */}
         <div className="border-t border-[#2a2a2a] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-sm bg-[#c8a96e]/10 border border-[#c8a96e]/20 flex items-center justify-center">
-              <span className="text-[10px] font-bold tracking-widest text-[#c8a96e]">EDS</span>
-            </div>
             <div>
               <p className="text-xs font-semibold tracking-[0.15em] uppercase text-[#f5f0e8]">Elite Design Studio</p>
               <p className="text-[10px] text-[#8b7355]">Transforming spaces into experiences</p>

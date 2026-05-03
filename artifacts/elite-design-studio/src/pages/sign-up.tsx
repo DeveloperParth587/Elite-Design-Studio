@@ -6,10 +6,7 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-sm bg-primary/15 border border-primary/30 mb-4">
-            <span className="text-sm font-bold tracking-widest text-primary">EDS</span>
-          </div>
-          <h1 className="text-xl font-semibold tracking-[0.08em] uppercase text-foreground">Elite Design Studio</h1>
+          <h1 className="text-xl font-semibold tracking-[0.08em] uppercase text-foreground mb-4">Elite Design Studio</h1>
           <p className="text-sm text-muted-foreground mt-1 tracking-wide">Create your account</p>
         </div>
         <SignUp
