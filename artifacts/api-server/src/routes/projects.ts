@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { db, projectsTable } from "@workspace/db";
-import { eq, ilike, and, type SQL } from "drizzle-orm";
+import { supabase, type ProjectRow } from "@workspace/db";
 import {
   CreateProjectBody,
   UpdateProjectBody,
@@ -11,12 +10,13 @@ const router = Router();
 
 router.get("/projects/featured", async (req, res) => {
   try {
-    const projects = await db
-      .select()
-      .from(projectsTable)
-      .where(eq(projectsTable.featured, true))
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("featured", true)
       .limit(6);
-    res.json(projects.map(mapProject));
+    if (error) throw error;
+    res.json((data ?? []).map(r => mapProjectRow(r as ProjectRow)));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to fetch featured projects" });
@@ -28,17 +28,14 @@ router.get("/projects", async (req, res) => {
     const parsed = ListProjectsQueryParams.safeParse(req.query);
     const params = parsed.success ? parsed.data : {};
 
-    const conditions: SQL[] = [];
-    if (params.category) conditions.push(eq(projectsTable.category, params.category));
-    if (params.featured !== undefined) conditions.push(eq(projectsTable.featured, params.featured));
-    if (params.search) conditions.push(ilike(projectsTable.title, `%${params.search}%`));
+    let query = supabase.from("projects").select("*");
+    if (params.category) query = query.eq("category", params.category);
+    if (params.featured !== undefined) query = query.eq("featured", params.featured);
+    if (params.search) query = query.ilike("title", `%${params.search}%`);
 
-    const projects = await db
-      .select()
-      .from(projectsTable)
-      .where(conditions.length > 0 ? and(...conditions) : undefined);
-
-    res.json(projects.map(mapProject));
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json((data ?? []).map(r => mapProjectRow(r as ProjectRow)));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to fetch projects" });
@@ -50,8 +47,23 @@ router.post("/projects", async (req, res) => {
     const parsed = CreateProjectBody.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-    const [project] = await db.insert(projectsTable).values(parsed.data).returning();
-    res.status(201).json(mapProject(project));
+    const d = parsed.data;
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({
+        title: d.title,
+        description: d.description,
+        category: d.category,
+        image_url: d.imageUrl,
+        featured: d.featured ?? false,
+        budget: d.budget ?? null,
+        location: d.location ?? null,
+        completed_at: d.completedAt ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json(mapProjectRow(data as ProjectRow));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to create project" });
@@ -61,9 +73,13 @@ router.post("/projects", async (req, res) => {
 router.get("/projects/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, id));
-    if (!project) return res.status(404).json({ error: "Not found" });
-    res.json(mapProject(project));
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error || !data) return res.status(404).json({ error: "Not found" });
+    res.json(mapProjectRow(data as ProjectRow));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to fetch project" });
@@ -76,13 +92,25 @@ router.put("/projects/:id", async (req, res) => {
     const parsed = UpdateProjectBody.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-    const [project] = await db
-      .update(projectsTable)
-      .set(parsed.data)
-      .where(eq(projectsTable.id, id))
-      .returning();
-    if (!project) return res.status(404).json({ error: "Not found" });
-    res.json(mapProject(project));
+    const d = parsed.data;
+    const patch: Record<string, unknown> = {};
+    if (d.title !== undefined) patch.title = d.title;
+    if (d.description !== undefined) patch.description = d.description;
+    if (d.category !== undefined) patch.category = d.category;
+    if (d.imageUrl !== undefined) patch.image_url = d.imageUrl;
+    if (d.featured !== undefined) patch.featured = d.featured;
+    if (d.budget !== undefined) patch.budget = d.budget;
+    if (d.location !== undefined) patch.location = d.location;
+    if (d.completedAt !== undefined) patch.completed_at = d.completedAt;
+
+    const { data, error } = await supabase
+      .from("projects")
+      .update(patch)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error || !data) return res.status(404).json({ error: "Not found" });
+    res.json(mapProjectRow(data as ProjectRow));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to update project" });
@@ -92,7 +120,8 @@ router.put("/projects/:id", async (req, res) => {
 router.delete("/projects/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    await db.delete(projectsTable).where(eq(projectsTable.id, id));
+    const { error } = await supabase.from("projects").delete().eq("id", id);
+    if (error) throw error;
     res.status(204).send();
   } catch (err) {
     req.log.error(err);
@@ -100,18 +129,18 @@ router.delete("/projects/:id", async (req, res) => {
   }
 });
 
-function mapProject(p: typeof projectsTable.$inferSelect) {
+function mapProjectRow(p: ProjectRow) {
   return {
     id: p.id,
     title: p.title,
     description: p.description,
     category: p.category,
-    imageUrl: p.imageUrl,
+    imageUrl: p.image_url,
     featured: p.featured,
     budget: p.budget ?? undefined,
     location: p.location ?? undefined,
-    completedAt: p.completedAt ?? undefined,
-    createdAt: p.createdAt.toISOString(),
+    completedAt: p.completed_at ?? undefined,
+    createdAt: p.created_at,
   };
 }
 

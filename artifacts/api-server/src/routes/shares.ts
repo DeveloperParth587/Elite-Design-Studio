@@ -1,7 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
-import { designSharesTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { supabase, type DesignShareRow } from "@workspace/db";
 import { randomBytes } from "node:crypto";
 
 const router = Router();
@@ -22,13 +20,14 @@ router.post("/shares", async (req, res) => {
     const token = randomBytes(8).toString("hex");
     const shareTitle = title?.trim() || `${type === "walkthrough" ? "Interior Walkthrough" : "Design Concept"} — ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
 
-    await db.insert(designSharesTable).values({
+    const { error } = await supabase.from("design_shares").insert({
       token,
       type,
       title: shareTitle,
       prompt: prompt.trim(),
       frames: JSON.stringify(frames),
     });
+    if (error) throw error;
 
     res.json({ token, title: shareTitle });
   } catch (err) {
@@ -40,21 +39,22 @@ router.post("/shares", async (req, res) => {
 router.get("/shares/:token", async (req, res) => {
   try {
     const { token } = req.params;
-    const [share] = await db
-      .select()
-      .from(designSharesTable)
-      .where(eq(designSharesTable.token, token))
-      .limit(1);
+    const { data, error } = await supabase
+      .from("design_shares")
+      .select("*")
+      .eq("token", token)
+      .single();
 
-    if (!share) return res.status(404).json({ error: "Share not found" });
+    if (error || !data) return res.status(404).json({ error: "Share not found" });
 
+    const share = data as DesignShareRow;
     res.json({
       token: share.token,
       type: share.type,
       title: share.title,
       prompt: share.prompt,
       frames: JSON.parse(share.frames),
-      createdAt: share.createdAt,
+      createdAt: share.created_at,
     });
   } catch (err) {
     req.log.error(err);

@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { db, leadsTable } from "@workspace/db";
-import { eq, ilike, and, type SQL } from "drizzle-orm";
+import { supabase, type LeadRow } from "@workspace/db";
 import { CreateLeadBody, ListLeadsQueryParams, ExportLeadsQueryParams } from "@workspace/api-zod";
 import { ai } from "@workspace/integrations-gemini-ai";
 
@@ -40,7 +39,13 @@ router.get("/leads/export", async (req, res) => {
   try {
     const parsed = ExportLeadsQueryParams.safeParse(req.query);
     const format = parsed.success ? parsed.data.format : "xlsx";
-    const leads = await db.select().from(leadsTable).orderBy(leadsTable.createdAt);
+
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at");
+    if (error) throw error;
+    const leads = (data ?? []) as LeadRow[];
 
     if (format === "xlsx") {
       const { default: ExcelJS } = await import("exceljs");
@@ -60,9 +65,9 @@ router.get("/leads/export", async (req, res) => {
       ];
       leads.forEach(l => ws.addRow({
         id: l.id, name: l.name, email: l.email, phone: l.phone ?? "",
-        budget: l.budget, timeline: l.timeline, propertyType: l.propertyType,
+        budget: l.budget, timeline: l.timeline, propertyType: l.property_type,
         classification: l.classification, message: l.message ?? "",
-        createdAt: l.createdAt.toISOString(),
+        createdAt: l.created_at,
       }));
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       res.setHeader("Content-Disposition", "attachment; filename=leads.xlsx");
@@ -70,7 +75,6 @@ router.get("/leads/export", async (req, res) => {
       return res.send(buffer);
     }
 
-    // PDF fallback — simple text
     const lines = [
       "Elite Design Studio - Leads Export",
       "=".repeat(40),
@@ -90,15 +94,14 @@ router.get("/leads", async (req, res) => {
     const parsed = ListLeadsQueryParams.safeParse(req.query);
     const params = parsed.success ? parsed.data : {};
 
-    const conditions: SQL[] = [];
-    if (params.classification) conditions.push(eq(leadsTable.classification, params.classification));
-    if (params.search) conditions.push(ilike(leadsTable.name, `%${params.search}%`));
+    let query = supabase.from("leads").select("*").order("created_at");
+    if (params.classification) query = query.eq("classification", params.classification);
+    if (params.search) query = query.ilike("name", `%${params.search}%`);
 
-    const leads = await db.select().from(leadsTable)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(leadsTable.createdAt);
+    const { data, error } = await query;
+    if (error) throw error;
 
-    res.json(leads.map(mapLead));
+    res.json((data ?? []).map(r => mapLeadRow(r as LeadRow)));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to fetch leads" });
@@ -114,12 +117,20 @@ router.post("/leads", async (req, res) => {
     const classification = classifyLead(Number(budget), timeline, propertyType);
     const generatedEmail = await generateEmailForLead(name, Number(budget), propertyType);
 
-    const [lead] = await db.insert(leadsTable).values({
-      name, email, phone, budget: String(budget),
-      timeline, propertyType, message, classification, generatedEmail,
-    }).returning();
+    const { data, error } = await supabase
+      .from("leads")
+      .insert({
+        name, email, phone: phone ?? null,
+        budget: Number(budget),
+        timeline, property_type: propertyType,
+        message: message ?? null,
+        classification, generated_email: generatedEmail,
+      })
+      .select()
+      .single();
+    if (error) throw error;
 
-    res.status(201).json(mapLead(lead));
+    res.status(201).json(mapLeadRow(data as LeadRow));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to create lead" });
@@ -129,9 +140,13 @@ router.post("/leads", async (req, res) => {
 router.get("/leads/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, id));
-    if (!lead) return res.status(404).json({ error: "Not found" });
-    res.json(mapLead(lead));
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error || !data) return res.status(404).json({ error: "Not found" });
+    res.json(mapLeadRow(data as LeadRow));
   } catch (err) {
     req.log.error(err);
     res.status(500).json({ error: "Failed to fetch lead" });
@@ -141,7 +156,8 @@ router.get("/leads/:id", async (req, res) => {
 router.delete("/leads/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    await db.delete(leadsTable).where(eq(leadsTable.id, id));
+    const { error } = await supabase.from("leads").delete().eq("id", id);
+    if (error) throw error;
     res.status(204).send();
   } catch (err) {
     req.log.error(err);
@@ -149,19 +165,19 @@ router.delete("/leads/:id", async (req, res) => {
   }
 });
 
-function mapLead(l: typeof leadsTable.$inferSelect) {
+function mapLeadRow(l: LeadRow) {
   return {
     id: l.id,
     name: l.name,
     email: l.email,
     phone: l.phone ?? undefined,
-    budget: parseFloat(String(l.budget)),
+    budget: Number(l.budget),
     timeline: l.timeline,
-    propertyType: l.propertyType,
+    propertyType: l.property_type,
     message: l.message ?? undefined,
     classification: l.classification as "HOT" | "COLD",
-    generatedEmail: l.generatedEmail ?? undefined,
-    createdAt: l.createdAt.toISOString(),
+    generatedEmail: l.generated_email ?? undefined,
+    createdAt: l.created_at,
   };
 }
 

@@ -1,21 +1,11 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
-import * as schema from "./schema";
+import { createClient } from "@supabase/supabase-js";
 
-const { Pool } = pg;
+const url = process.env.SUPABASE_URL;
+const key = process.env.SUPABASE_ANON_KEY;
 
-const connectionString = process.env.SUPABASE_DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error(
-    "SUPABASE_DATABASE_URL must be set. Please add your Supabase connection string.",
-  );
+if (!url || !key) {
+  throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY must be set.");
 }
 
-export const pool = new Pool({
-  connectionString,
-  ssl: { rejectUnauthorized: false },
-});
-export const db = drizzle(pool, { schema });
-
-export * from "./schema";
+export const supabase = createClient(url, key);
+export * from "./types";
