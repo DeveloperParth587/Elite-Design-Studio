@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Trash2, Mail, Download, Flame, Snowflake } from "lucide-react";
 import AdminLayout from "@/components/layout/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,22 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import type { Lead } from "@workspace/api-client-react";
 
+const REFETCH_MS = 8_000;
+
+function useTimeSince(ts: number) {
+  const [label, setLabel] = useState("just now");
+  useEffect(() => {
+    const tick = () => {
+      const s = Math.round((Date.now() - ts) / 1000);
+      setLabel(s < 5 ? "just now" : s < 60 ? `${s}s ago` : `${Math.round(s / 60)}m ago`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [ts]);
+  return label;
+}
+
 export default function AdminLeads() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | "HOT" | "COLD">("ALL");
@@ -23,9 +39,10 @@ export default function AdminLeads() {
   const queryClient = useQueryClient();
 
   const params = filter !== "ALL" ? { classification: filter as "HOT" | "COLD" } : {};
-  const { data: leads = [], isLoading } = useListLeads(params, {
-    query: { queryKey: getListLeadsQueryKey(params) },
+  const { data: leads = [], isLoading, dataUpdatedAt } = useListLeads(params, {
+    query: { queryKey: getListLeadsQueryKey(params), refetchInterval: REFETCH_MS },
   });
+  const updatedLabel = useTimeSince(dataUpdatedAt);
   const { mutateAsync: deleteLead } = useDeleteLead();
 
   const filtered = leads.filter(
@@ -51,7 +68,13 @@ export default function AdminLeads() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <p className="text-xs tracking-[0.25em] uppercase text-primary mb-1">Admin</p>
-            <h1 className="text-2xl font-bold">Lead Management</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold">Lead Management</h1>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] tracking-widest uppercase text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live · {updatedLabel}
+              </span>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button

@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { TrendingUp, Users, FolderOpen, Flame, Snowflake, IndianRupee, Plus, Upload, Trash2, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { TrendingUp, Users, FolderOpen, Flame, Snowflake, IndianRupee, Plus, Upload, Trash2, FileSpreadsheet, AlertCircle, RefreshCw } from "lucide-react";
 import { Link } from "wouter";
 import AdminLayout from "@/components/layout/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,20 +19,39 @@ import {
 
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=600&q=60";
 
+const REFETCH_MS = 10_000;
+
+function useTimeSince(ts: number) {
+  const [label, setLabel] = useState("just now");
+  useEffect(() => {
+    const tick = () => {
+      const s = Math.round((Date.now() - ts) / 1000);
+      setLabel(s < 5 ? "just now" : s < 60 ? `${s}s ago` : `${Math.round(s / 60)}m ago`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [ts]);
+  return label;
+}
+
 export default function AdminDashboard() {
-  const { data: stats, isLoading: statsLoading } = useGetDashboardStats({
-    query: { queryKey: getGetDashboardStatsQueryKey() },
+  const { data: stats, isLoading: statsLoading, dataUpdatedAt } = useGetDashboardStats({
+    query: { queryKey: getGetDashboardStatsQueryKey(), refetchInterval: REFETCH_MS },
   });
   const { data: chartData = [], isLoading: chartLoading } = useGetLeadChart({
-    query: { queryKey: getGetLeadChartQueryKey() },
+    query: { queryKey: getGetLeadChartQueryKey(), refetchInterval: REFETCH_MS },
   });
-  const { data: leads = [] } = useListLeads();
+  const { data: leads = [] } = useListLeads({}, {
+    query: { refetchInterval: REFETCH_MS },
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [importing, setImporting] = useState<"projects" | "leads" | null>(null);
   const [clearing, setClearing] = useState(false);
   const projectsRef = useRef<HTMLInputElement>(null);
   const leadsRef = useRef<HTMLInputElement>(null);
+  const updatedLabel = useTimeSince(dataUpdatedAt);
 
   const recentLeads = leads.slice(-5).reverse();
   const noData = !statsLoading && (stats?.totalLeads ?? 0) === 0 && (stats?.totalProjects ?? 0) === 0;
@@ -94,7 +113,13 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
             <p className="text-xs tracking-[0.25em] uppercase text-primary mb-1">Admin</p>
-            <h1 className="text-xl sm:text-2xl font-bold">Dashboard</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold">Dashboard</h1>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] tracking-widest uppercase text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live · {updatedLabel}
+              </span>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <input ref={projectsRef} type="file" accept=".xlsx" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImport("projects", f); e.target.value = ""; }} />
