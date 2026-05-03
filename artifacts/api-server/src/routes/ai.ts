@@ -1,51 +1,10 @@
 import { Router } from "express";
 import { ai, generateImage as geminiGenerateImage } from "@workspace/integrations-gemini-ai";
 import { EnhancePromptBody, GenerateImageBody, GenerateEmailBody } from "@workspace/api-zod";
-import https from "node:https";
 
 const router = Router();
 
 const GEMINI_MODEL = "gemini-2.5-flash";
-
-// Use node:https directly to bypass any Replit fetch proxy interception
-function httpsPost(
-  url: string,
-  body: object,
-  headers: Record<string, string>
-): Promise<{ status: number; buffer: Buffer; contentType: string }> {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    const urlObj = new URL(url);
-    const options: https.RequestOptions = {
-      hostname: urlObj.hostname,
-      port: 443,
-      path: urlObj.pathname + urlObj.search,
-      method: "POST",
-      headers: {
-        ...headers,
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(data),
-      },
-    };
-    const req = https.request(options, (res) => {
-      const chunks: Buffer[] = [];
-      res.on("data", (chunk: Buffer) => chunks.push(chunk));
-      res.on("end", () => {
-        resolve({
-          status: res.statusCode ?? 0,
-          buffer: Buffer.concat(chunks),
-          contentType: (res.headers["content-type"] ?? "application/octet-stream") as string,
-        });
-      });
-    });
-    req.on("error", reject);
-    req.setTimeout(120_000, () => {
-      req.destroy(new Error("Request timed out after 120s"));
-    });
-    req.write(data);
-    req.end();
-  });
-}
 
 router.post("/ai/enhance-prompt", async (req, res) => {
   try {
@@ -122,39 +81,41 @@ router.post("/ai/generate-image", async (req, res) => {
   }
 });
 
-router.post("/ai/generate-video", async (req, res) => {
+router.post("/ai/generate-slideshow", async (req, res) => {
   try {
     const { prompt } = req.body as { prompt?: string };
     if (!prompt?.trim()) return res.status(400).json({ error: "Prompt is required" });
 
-    const hfToken = process.env.HUGGING_FACE_API_TOKEN;
-    if (!hfToken) return res.status(500).json({ error: "Hugging Face API token not configured" });
+    const base = prompt.trim();
 
-    const enhancedPrompt = `${prompt.trim()}, luxury interior design, cinematic, photorealistic, 4K, smooth camera movement`;
-
-    // Use node:https directly to bypass Replit fetch proxy
-    const result = await httpsPost(
-      "https://api-inference.huggingface.co/models/damo-vilab/text-to-video-ms-1.7b",
-      { inputs: enhancedPrompt },
+    const perspectives = [
       {
-        Authorization: `Bearer ${hfToken}`,
-        "x-wait-for-model": "true",
-      }
+        label: "Overview",
+        suffix: "Wide-angle full room overview, architectural photography, natural and ambient lighting, ultra-realistic, 8K.",
+      },
+      {
+        label: "Detail",
+        suffix: "Close-up detail shot focusing on premium materials, textures, and finishes. Shallow depth of field, luxury magazine style.",
+      },
+      {
+        label: "Mood",
+        suffix: "Atmospheric dusk or evening mood lighting, warm golden tones, cinematic, evocative and emotive interior photography.",
+      },
+    ];
+
+    const slides = await Promise.all(
+      perspectives.map(async ({ label, suffix }) => {
+        const fullPrompt = `${base}. ${suffix}`;
+        const result = await geminiGenerateImage(fullPrompt);
+        return { label, b64_json: result.b64_json, mimeType: result.mimeType };
+      })
     );
 
-    if (result.status >= 400) {
-      const errText = result.buffer.toString("utf8").slice(0, 300);
-      throw new Error(`HF ${result.status}: ${errText}`);
-    }
-
-    const videoBase64 = result.buffer.toString("base64");
-    const contentType = result.contentType.split(";")[0].trim() || "video/mp4";
-
-    res.json({ videoBase64, contentType, prompt: enhancedPrompt });
+    res.json({ slides });
   } catch (err) {
     req.log.error(err);
-    const msg = err instanceof Error ? err.message : "Video generation failed";
-    res.status(502).json({ error: `Video generation failed: ${msg}. Please retry.` });
+    const msg = err instanceof Error ? err.message : "Slideshow generation failed";
+    res.status(502).json({ error: `Generation failed: ${msg}. Please retry.` });
   }
 });
 
