@@ -16,7 +16,7 @@ function classifyLead(budget: number, timeline: number, propertyType: string): "
 async function generateEmailForLead(name: string, budget: number, propertyType: string): Promise<string> {
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       contents: [{
         role: "user",
         parts: [{

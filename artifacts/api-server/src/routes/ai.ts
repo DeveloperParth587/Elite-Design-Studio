@@ -1,46 +1,50 @@
 import { Router } from "express";
-import { ai } from "@workspace/integrations-gemini-ai";
+import { ai, generateImage as geminiGenerateImage } from "@workspace/integrations-gemini-ai";
 import { EnhancePromptBody, GenerateImageBody, GenerateEmailBody } from "@workspace/api-zod";
-import pRetry, { AbortError } from "p-retry";
+import https from "node:https";
 
 const router = Router();
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
-async function callHuggingFace(url: string, body: object, hfToken: string): Promise<Response> {
-  return pRetry(
-    async () => {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${hfToken}`,
-          "Content-Type": "application/json",
-          "x-wait-for-model": "true",
-        },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(120_000),
-      });
-
-      if (res.status === 503) {
-        throw new AbortError("Model still loading after wait timeout");
-      }
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HF API ${res.status}: ${text.slice(0, 200)}`);
-      }
-
-      return res;
-    },
-    {
-      retries: 3,
-      minTimeout: 8000,
-      maxTimeout: 20000,
-      onFailedAttempt: (error) => {
-        if (error instanceof AbortError) throw error;
+// Use node:https directly to bypass any Replit fetch proxy interception
+function httpsPost(
+  url: string,
+  body: object,
+  headers: Record<string, string>
+): Promise<{ status: number; buffer: Buffer; contentType: string }> {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body);
+    const urlObj = new URL(url);
+    const options: https.RequestOptions = {
+      hostname: urlObj.hostname,
+      port: 443,
+      path: urlObj.pathname + urlObj.search,
+      method: "POST",
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(data),
       },
-    }
-  );
+    };
+    const req = https.request(options, (res) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (chunk: Buffer) => chunks.push(chunk));
+      res.on("end", () => {
+        resolve({
+          status: res.statusCode ?? 0,
+          buffer: Buffer.concat(chunks),
+          contentType: (res.headers["content-type"] ?? "application/octet-stream") as string,
+        });
+      });
+    });
+    req.on("error", reject);
+    req.setTimeout(120_000, () => {
+      req.destroy(new Error("Request timed out after 120s"));
+    });
+    req.write(data);
+    req.end();
+  });
 }
 
 router.post("/ai/enhance-prompt", async (req, res) => {
@@ -86,33 +90,31 @@ router.post("/ai/generate-image", async (req, res) => {
     let { prompt, enhance } = parsed.data;
     let enhancedPrompt = prompt;
 
+    // Optionally enhance with Gemini text first
     if (enhance) {
       try {
         const enhResponse = await ai.models.generateContent({
           model: GEMINI_MODEL,
           contents: [{
             role: "user",
-            parts: [{ text: `Convert to detailed interior design image prompt (max 80 words, ultra realistic, professional photography): "${prompt}"` }]
+            parts: [{ text: `Convert to detailed interior design image prompt (max 80 words, photorealistic, professional photography, luxury): "${prompt}"` }]
           }],
           config: { maxOutputTokens: 200 }
         });
         enhancedPrompt = enhResponse.text?.trim() ?? prompt;
-      } catch { /* use original */ }
+      } catch { /* fall back to original prompt */ }
     }
 
-    const hfToken = process.env.HUGGING_FACE_API_TOKEN;
-    if (!hfToken) return res.status(500).json({ error: "Hugging Face API token not configured" });
-
-    const hfRes = await callHuggingFace(
-      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-      { inputs: enhancedPrompt },
-      hfToken
+    // Use Gemini image generation (routes through Replit AI Integration proxy — always works)
+    const imageResult = await geminiGenerateImage(
+      `Interior design concept: ${enhancedPrompt}. Photorealistic, architectural photography style, professional lighting, high resolution.`
     );
 
-    const imageBuffer = await hfRes.arrayBuffer();
-    const imageBase64 = Buffer.from(imageBuffer).toString("base64");
-
-    res.json({ imageBase64, enhancedPrompt });
+    res.json({
+      imageBase64: imageResult.b64_json,
+      mimeType: imageResult.mimeType,
+      enhancedPrompt,
+    });
   } catch (err) {
     req.log.error(err);
     const msg = err instanceof Error ? err.message : "Image generation failed";
@@ -130,17 +132,25 @@ router.post("/ai/generate-video", async (req, res) => {
 
     const enhancedPrompt = `${prompt.trim()}, luxury interior design, cinematic, photorealistic, 4K, smooth camera movement`;
 
-    const hfRes = await callHuggingFace(
+    // Use node:https directly to bypass Replit fetch proxy
+    const result = await httpsPost(
       "https://api-inference.huggingface.co/models/damo-vilab/text-to-video-ms-1.7b",
       { inputs: enhancedPrompt },
-      hfToken
+      {
+        Authorization: `Bearer ${hfToken}`,
+        "x-wait-for-model": "true",
+      }
     );
 
-    const videoBuffer = await hfRes.arrayBuffer();
-    const videoBase64 = Buffer.from(videoBuffer).toString("base64");
-    const contentType = hfRes.headers.get("content-type") ?? "video/mp4";
+    if (result.status >= 400) {
+      const errText = result.buffer.toString("utf8").slice(0, 300);
+      throw new Error(`HF ${result.status}: ${errText}`);
+    }
 
-    res.json({ videoBase64, contentType: contentType.split(";")[0].trim(), prompt: enhancedPrompt });
+    const videoBase64 = result.buffer.toString("base64");
+    const contentType = result.contentType.split(";")[0].trim() || "video/mp4";
+
+    res.json({ videoBase64, contentType, prompt: enhancedPrompt });
   } catch (err) {
     req.log.error(err);
     const msg = err instanceof Error ? err.message : "Video generation failed";

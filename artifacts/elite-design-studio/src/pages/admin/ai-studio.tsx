@@ -18,6 +18,7 @@ export default function AIStudio() {
   const [prompt, setPrompt] = useState("");
   const [enhancedPrompt, setEnhancedPrompt] = useState("");
   const [imageBase64, setImageBase64] = useState("");
+  const [imageMime, setImageMime] = useState("image/png");
   const [useEnhanced, setUseEnhanced] = useState(true);
 
   // Video generation state
@@ -50,6 +51,7 @@ export default function AIStudio() {
     try {
       const result = await generateImage({ data: { prompt: finalPrompt, enhance: false } });
       setImageBase64(result.imageBase64);
+      if ((result as { mimeType?: string }).mimeType) setImageMime((result as { mimeType?: string }).mimeType!);
       if (result.enhancedPrompt) setEnhancedPrompt(result.enhancedPrompt);
       toast({ title: "Image generated successfully" });
     } catch (err: unknown) {
@@ -60,9 +62,10 @@ export default function AIStudio() {
 
   const handleDownloadImage = () => {
     if (!imageBase64) return;
+    const ext = imageMime.split("/")[1] ?? "png";
     const link = document.createElement("a");
-    link.href = `data:image/jpeg;base64,${imageBase64}`;
-    link.download = "elite-design-studio-ai.jpg";
+    link.href = `data:${imageMime};base64,${imageBase64}`;
+    link.download = `elite-design-studio-ai.${ext}`;
     link.click();
   };
 
@@ -225,7 +228,7 @@ export default function AIStudio() {
                 {imageBase64 ? (
                   <div className="space-y-3">
                     <div className="rounded-xl overflow-hidden border border-border">
-                      <img src={`data:image/jpeg;base64,${imageBase64}`} alt="AI generated interior" className="w-full" />
+                      <img src={`data:${imageMime};base64,${imageBase64}`} alt="AI generated interior" className="w-full" />
                     </div>
                     <div className="flex gap-2">
                       <Button onClick={handleDownloadImage} variant="outline" size="sm" className="flex-1 text-xs gap-1.5 border-border">
