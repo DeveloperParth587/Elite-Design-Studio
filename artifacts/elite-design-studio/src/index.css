@@ -242,9 +242,35 @@
   .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after { inset: -1px; }
 
-  /* Hide Clerk "Development mode" badge via stable data attribute */
-  [data-localization-key="badge__devMode"] {
+  /* Hide Clerk badges (dev mode, deployment, etc.) */
+  [data-localization-key="badge__devMode"],
+  [data-localization-key*="badge__"],
+  [data-localization-key*="deployment"],
+  [data-localization-key*="developmentMode"] {
     display: none !important;
+  }
+
+  /* Bright cyan/aqua colors for UserButton menu items */
+  .cl-userButtonPopoverActionButton {
+    color: #00f7ff !important;
+    font-weight: 500 !important;
+  }
+
+  .cl-userButtonPopoverActionButton:hover {
+    color: #00ffff !important;
+    background-color: rgba(0, 127, 127, 0.15) !important;
+  }
+
+  /* Bright lime for destructive actions */
+  .cl-userButtonPopoverActionButton[data-localization-key*="signOut"],
+  .cl-userButtonPopoverActionButton[data-localization-key*="logout"] {
+    color: #00ff88 !important;
+  }
+
+  .cl-userButtonPopoverActionButton[data-localization-key*="signOut"]:hover,
+  .cl-userButtonPopoverActionButton[data-localization-key*="logout"]:hover {
+    color: #00ffaa !important;
+    background-color: rgba(0, 127, 100, 0.15) !important;
   }
 
   .gold-text {
