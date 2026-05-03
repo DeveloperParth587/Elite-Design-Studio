@@ -1,0 +1,7 @@
+[build.environment]
+  # VITE_CLERK_PROXY_URL is a public URL by design — Vite inlines VITE_* vars
+  # into the client bundle, and the Clerk proxy URL is the public endpoint
+  # browsers hit. Exclude it (and its non-prefixed counterpart) from the
+  # secrets scanner so the proxy path string in api-server source does not
+  # fail the build.
+  SECRETS_SCAN_OMIT_KEYS = "CLERK_PROXY_URL,VITE_CLERK_PROXY_URL"
