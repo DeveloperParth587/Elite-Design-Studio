@@ -61,12 +61,12 @@ export default function Consultation() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Navbar />
-        <div className="text-center max-w-md px-6">
+        <div className="text-center max-w-md px-6 pt-20">
           <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={32} className="text-primary" />
+            <CheckCircle size={30} className="text-primary" />
           </div>
-          <h2 className="text-3xl font-bold mb-4">Consultation Requested</h2>
-          <p className="text-muted-foreground leading-relaxed">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Consultation Requested</h2>
+          <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
             Thank you. Our principal designer will be in touch within 24 hours to schedule your complimentary consultation.
           </p>
         </div>
@@ -77,13 +77,13 @@ export default function Consultation() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-28 pb-24 max-w-4xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-          {/* Left */}
+      <div className="pt-24 sm:pt-28 pb-16 sm:pb-24 max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+          {/* Left info */}
           <div>
             <p className="text-xs tracking-[0.3em] uppercase text-primary mb-3">Begin Your Journey</p>
-            <h1 className="text-4xl font-bold mb-6">Book a<br />Consultation</h1>
-            <p className="text-muted-foreground leading-relaxed mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-5">Book a<br />Consultation</h1>
+            <p className="text-muted-foreground leading-relaxed mb-7 text-sm sm:text-base">
               Every great interior begins with an honest conversation. Tell us about your space, your vision, and your timeline — we'll handle the rest.
             </p>
             <div className="space-y-4">
@@ -106,62 +106,60 @@ export default function Consultation() {
           </div>
 
           {/* Form */}
-          <div className="bg-card border border-border rounded-2xl p-8">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Full Name *</Label>
-                  <Input {...register("name")} placeholder="Your name" className="bg-background border-border" />
-                  {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
-                </div>
+          <div className="bg-card border border-border rounded-2xl p-5 sm:p-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Full Name *</Label>
+                <Input {...register("name")} placeholder="Your name" className="bg-background border-border" />
+                {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
+              </div>
 
-                <div>
-                  <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Email Address *</Label>
-                  <Input {...register("email")} type="email" placeholder="your@email.com" className="bg-background border-border" />
-                  {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
-                </div>
+              <div>
+                <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Email Address *</Label>
+                <Input {...register("email")} type="email" placeholder="your@email.com" className="bg-background border-border" />
+                {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
+              </div>
 
-                <div>
-                  <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Phone Number</Label>
-                  <Input {...register("phone")} type="tel" placeholder="+91 98765 43210" className="bg-background border-border" />
-                </div>
+              <div>
+                <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Phone Number</Label>
+                <Input {...register("phone")} type="tel" placeholder="+91 98765 43210" className="bg-background border-border" />
+              </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Budget (₹) *</Label>
-                    <Input {...register("budget")} type="number" placeholder="500000" className="bg-background border-border" />
-                    {errors.budget && <p className="text-xs text-destructive mt-1">{errors.budget.message}</p>}
-                  </div>
-                  <div>
-                    <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Timeline (days) *</Label>
-                    <Input {...register("timeline")} type="number" placeholder="90" className="bg-background border-border" />
-                    {errors.timeline && <p className="text-xs text-destructive mt-1">{errors.timeline.message}</p>}
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Property Type *</Label>
-                  <select
-                    {...register("propertyType")}
-                    className="w-full rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring"
-                  >
-                    <option value="">Select type...</option>
-                    {PROPERTY_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                  {errors.propertyType && <p className="text-xs text-destructive mt-1">{errors.propertyType.message}</p>}
+                  <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Budget (₹) *</Label>
+                  <Input {...register("budget")} type="number" placeholder="500000" className="bg-background border-border" />
+                  {errors.budget && <p className="text-xs text-destructive mt-1">{errors.budget.message}</p>}
                 </div>
-
                 <div>
-                  <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Message</Label>
-                  <Textarea
-                    {...register("message")}
-                    placeholder="Tell us about your vision, inspirations, or any specific requirements..."
-                    rows={4}
-                    className="bg-background border-border resize-none"
-                  />
+                  <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Timeline (days) *</Label>
+                  <Input {...register("timeline")} type="number" placeholder="90" className="bg-background border-border" />
+                  {errors.timeline && <p className="text-xs text-destructive mt-1">{errors.timeline.message}</p>}
                 </div>
+              </div>
+
+              <div>
+                <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Property Type *</Label>
+                <select
+                  {...register("propertyType")}
+                  className="w-full rounded-md border border-border bg-background text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="">Select type...</option>
+                  {PROPERTY_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+                {errors.propertyType && <p className="text-xs text-destructive mt-1">{errors.propertyType.message}</p>}
+              </div>
+
+              <div>
+                <Label className="text-xs tracking-wide uppercase text-muted-foreground mb-1.5 block">Message</Label>
+                <Textarea
+                  {...register("message")}
+                  placeholder="Tell us about your vision, inspirations, or any specific requirements..."
+                  rows={3}
+                  className="bg-background border-border resize-none text-sm"
+                />
               </div>
 
               <Button
@@ -169,9 +167,7 @@ export default function Consultation() {
                 disabled={isPending}
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-xs tracking-[0.2em] uppercase font-medium py-5"
               >
-                {isPending ? "Submitting..." : (
-                  <>Submit Request <ArrowRight size={14} className="ml-2" /></>
-                )}
+                {isPending ? "Submitting..." : <span className="flex items-center gap-2">Submit Request <ArrowRight size={14} /></span>}
               </Button>
             </form>
           </div>

@@ -1,6 +1,5 @@
 import { Award, Users, Globe, Heart } from "lucide-react";
 import Navbar from "@/components/layout/navbar";
-import { Badge } from "@/components/ui/badge";
 
 const team = [
   {
@@ -40,95 +39,82 @@ export default function About() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-28 pb-24">
+      <div className="pt-24 sm:pt-28 pb-16 sm:pb-24">
         {/* Hero */}
-        <div className="max-w-4xl mx-auto px-6 text-center mb-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center mb-16 sm:mb-24">
           <p className="text-xs tracking-[0.3em] uppercase text-primary mb-3">Our Story</p>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 sm:mb-6">
             Obsessed with<br />
             <span className="gold-text">Excellence</span>
           </h1>
-          <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
-            Elite Design Studio was founded on a single conviction: that thoughtful, beautiful spaces have the power to change how people feel, work, and live. Since 2009, we have pursued this belief without compromise.
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed text-sm sm:text-base md:text-lg">
+            Founded in 2009 in Mumbai, Elite Design Studio has redefined what luxury interior design means for India's most discerning clients. We don't just design spaces — we engineer experiences.
           </p>
         </div>
 
-        {/* Philosophy */}
-        <div className="relative py-20 mb-24">
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-10"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1400&q=80')" }}
-          />
-          <div className="relative max-w-5xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-              <div>
-                <p className="text-xs tracking-[0.3em] uppercase text-primary mb-4">Our Philosophy</p>
-                <h2 className="text-3xl font-bold mb-6">Restraint as a Form of Luxury</h2>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  We believe the most powerful interiors are the ones that look effortless. Not empty — considered. Not minimal — intentional. The most luxurious thing we can offer is clarity: a space where everything earns its place.
-                </p>
-                <p className="text-muted-foreground leading-relaxed">
-                  Our process begins not with materials or moods, but with questions. How do you move through a room? Where does light fall in the morning? What do you want to feel when you come home? The answers shape everything.
-                </p>
+        {/* Pillars */}
+        <div className="border-y border-border py-14 sm:py-20 mb-16 sm:mb-24">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
+            {[
+              { icon: Users, title: "Client-First", desc: "Every decision begins with understanding how you live, work, and feel in your space." },
+              { icon: Award, title: "Award-Winning", desc: "Recognised by the Architectural Digest Awards, AD100 India, and the Design Business Council." },
+              { icon: Globe, title: "Pan-India", desc: "Studios in Mumbai, Delhi, Bengaluru, and project delivery across 12 cities." },
+              { icon: Heart, title: "Long-Term Relationships", desc: "68% of our clients return for subsequent projects. We build trust that lasts." },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="flex flex-col items-start sm:items-center sm:text-center">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+                  <Icon size={18} className="text-primary" />
+                </div>
+                <h3 className="font-semibold text-sm sm:text-base tracking-wide mb-2">{title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{desc}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { icon: Heart, label: "Client-First" },
-                  { icon: Award, label: "Award-Winning" },
-                  { icon: Globe, label: "Pan-India" },
-                  { icon: Users, label: "Expert Team" },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="glass-panel rounded-xl p-6 text-center">
-                    <Icon size={24} className="text-primary mx-auto mb-3" />
-                    <p className="text-xs tracking-[0.2em] uppercase font-medium">{label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
         {/* Team */}
-        <div className="max-w-7xl mx-auto px-6 mb-24">
-          <div className="text-center mb-12">
-            <p className="text-xs tracking-[0.3em] uppercase text-primary mb-2">The Team</p>
-            <h2 className="text-3xl md:text-4xl font-bold">The Minds Behind the Work</h2>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-16 sm:mb-24">
+          <div className="text-center mb-10 sm:mb-14">
+            <p className="text-xs tracking-[0.3em] uppercase text-primary mb-2">The People</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">Meet the Team</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {team.map((member) => (
-              <div key={member.name} className="group">
-                <div className="aspect-[3/4] overflow-hidden rounded-xl mb-5 border border-border">
+              <div key={member.name} className="group text-center">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden mx-auto mb-4 border-2 border-border group-hover:border-primary/40 transition-colors">
                   <img
                     src={member.img}
                     alt={member.name}
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 </div>
-                <h3 className="font-semibold text-foreground tracking-wide">{member.name}</h3>
-                <p className="text-xs text-primary tracking-wide mb-2">{member.role}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{member.bio}</p>
+                <h3 className="font-semibold text-sm tracking-wide">{member.name}</h3>
+                <p className="text-[10px] text-primary tracking-[0.12em] uppercase mt-0.5 mb-2">{member.role}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed px-2">{member.bio}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Awards */}
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8 sm:mb-10">
             <p className="text-xs tracking-[0.3em] uppercase text-primary mb-2">Recognition</p>
-            <h2 className="text-3xl font-bold">Awards & Accolades</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">Awards & Honours</h2>
           </div>
-          <div className="space-y-4">
-            {awards.map((award) => (
-              <div key={award.name} className="flex items-center justify-between p-6 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors">
-                <div className="flex items-center gap-6">
-                  <span className="text-2xl font-bold text-primary/40 w-14 shrink-0">{award.year}</span>
+          <div className="space-y-3 sm:space-y-4">
+            {awards.map(({ year, name, body }) => (
+              <div key={name} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors gap-2 sm:gap-4">
+                <div className="flex items-center gap-4 sm:gap-6">
+                  <span className="text-primary font-bold text-base sm:text-lg shrink-0">{year}</span>
                   <div>
-                    <p className="font-semibold text-foreground tracking-wide">{award.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{award.body}</p>
+                    <h3 className="font-semibold tracking-wide text-sm sm:text-base">{name}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{body}</p>
                   </div>
                 </div>
-                <Award size={20} className="text-primary/40 shrink-0" />
+                <Award size={18} className="text-primary/40 hidden sm:block shrink-0" />
               </div>
             ))}
           </div>
